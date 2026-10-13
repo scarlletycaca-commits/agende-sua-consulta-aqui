@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
 });
 
 
-const WHATS = "5583987871880";
+const WHATS = "5583988551095";
 function maskCpf(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
   return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
