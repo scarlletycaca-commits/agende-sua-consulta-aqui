@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo-eclim.jpg.asset.json";
-import { useServerFn } from "@tanstack/react-start";
-import { sugerirEspecialidade, ESPECIALIDADES } from "@/lib/especialidade.functions";
+import logo from "@/assets/logo-eclim.png";
+import { ESPECIALIDADES } from "@/lib/especialidade.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,8 +18,8 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-
 const WHATS = "5583988551095";
+
 function maskCpf(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
   return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
@@ -56,20 +55,6 @@ function Index() {
   const [form, setForm] = useState({ nome: "", cpf: "", cidade: "", telefone: "", especialidade: "", data: "" });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "erro">("idle");
   const [erro, setErro] = useState("");
-  const [necessidades, setNecessidades] = useState("");
-  const [ia, setIa] = useState<{ loading: boolean; motivo?: string | undefined; erro?: string | undefined }>({ loading: false });
-  const sugerir = useServerFn(sugerirEspecialidade);
-
-  async function pedirSugestao() {
-    if (necessidades.trim().length < 5) { setIa({ loading: false, erro: "Descreva melhor as necessidades do paciente." }); return; }
-    setIa({ loading: true });
-    try {
-      const r = await sugerir({ data: { necessidades } });
-      if ("error" in r && r.error) { setIa({ loading: false, erro: r.error }); return; }
-      if ("especialidade" in r && r.especialidade) setForm((f) => ({ ...f, especialidade: r.especialidade }));
-      setIa({ loading: false, motivo: "motivo" in r ? r.motivo : undefined });
-    } catch { setIa({ loading: false, erro: "Não foi possível obter a sugestão." }); }
-  }
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -82,14 +67,14 @@ function Index() {
     setStatus("saving");
     const { error } = await supabase.from("agendamentos").insert({
       nome: form.nome.trim(), cidade: form.cidade.trim(), telefone: form.telefone, especialidade: form.especialidade,
-      cpf: form.cpf, data_preferida: form.data, necessidades: necessidades.trim() || null,
+      cpf: form.cpf, data_preferida: form.data,
     });
     if (error) { setStatus("erro"); setErro("Não foi possível enviar. Tente novamente."); return; }
     setStatus("ok");
   }
 
   function linkWhats() {
-    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCPF: ${form.cpf}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${form.especialidade}\nData sugerida: ${form.data ? fmtData(form.data) : "-"}${necessidades.trim() ? `\nNecessidades: ${necessidades.trim()}` : ""}\n\nPor favor, confirmem se há disponibilidade nesta data.`;
+    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCPF: ${form.cpf}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${form.especialidade}\nData sugerida: ${form.data ? fmtData(form.data) : "-"}\n\nPor favor, confirmem se há disponibilidade nesta data.`;
     return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -97,9 +82,8 @@ function Index() {
     <main className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <header className="mb-8 text-center">
-          <img src={logo.url} alt="Clínica ECLIM" className="mx-auto mb-2 h-32 w-32 rounded-2xl object-contain" />
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">Clínica ECLIM · Especialidades Clínicas e Diagnóstico por Imagem</p>
-          <h1 className="mt-2 font-display text-4xl text-foreground">Agende sua consulta</h1>
+          <img src={logo} alt="Clínica ECLIM" className="mx-auto mb-4 h-36 w-auto object-contain" />
+          <h1 className="font-display text-4xl text-foreground">Agende sua consulta</h1>
           <p className="mt-3 text-muted-foreground">Preencha os dados. Sua solicitação vai para o WhatsApp da clínica, que confirma a disponibilidade da data.</p>
         </header>
 
@@ -114,7 +98,7 @@ function Index() {
                 Abrir WhatsApp da clínica
               </a>
               <button className="mt-6 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                onClick={() => { setForm({ nome: "", cpf: "", cidade: "", telefone: "", especialidade: "", data: "" }); setNecessidades(""); setIa({ loading: false }); setStatus("idle"); }}>
+                onClick={() => { setForm({ nome: "", cpf: "", cidade: "", telefone: "", especialidade: "", data: "" }); setStatus("idle"); }}>
                 Fazer novo agendamento
               </button>
             </div>
@@ -136,19 +120,6 @@ function Index() {
                 <input className="campo" inputMode="tel" value={form.telefone} placeholder="(11) 99999-9999"
                   onChange={(e) => setForm({ ...form, telefone: maskPhone(e.target.value) })} />
               </Campo>
-              <Campo label="Necessidades do paciente">
-                <textarea className="campo min-h-24" value={necessidades} maxLength={2000}
-                  placeholder="Ex.: dor no peito ao subir escadas há duas semanas"
-                  onChange={(e) => setNecessidades(e.target.value)} />
-              </Campo>
-              <div className="rounded-xl bg-primary/5 p-4">
-                <button type="button" onClick={pedirSugestao} disabled={ia.loading}
-                  className="rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:opacity-60">
-                  {ia.loading ? "Analisando..." : "✨ Sugerir especialidade com IA"}
-                </button>
-                {ia.motivo && <p className="mt-2 text-sm text-muted-foreground">{ia.motivo}</p>}
-                {ia.erro && <p className="mt-2 text-sm text-destructive">{ia.erro}</p>}
-              </div>
               <Campo label="Especialidade">
                 <select className="campo" value={form.especialidade}
                   onChange={(e) => setForm({ ...form, especialidade: e.target.value })}>
