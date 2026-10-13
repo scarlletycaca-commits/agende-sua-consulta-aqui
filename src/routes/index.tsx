@@ -32,7 +32,7 @@ function Index() {
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "erro">("idle");
   const [erro, setErro] = useState("");
   const [necessidades, setNecessidades] = useState("");
-  const [ia, setIa] = useState<{ loading: boolean; motivo?: string; erro?: string }>({ loading: false });
+  const [ia, setIa] = useState<{ loading: boolean; motivo?: string | undefined; erro?: string | undefined }>({ loading: false });
   const sugerir = useServerFn(sugerirEspecialidade);
 
   async function pedirSugestao() {
