@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { sugerirEspecialidade, ESPECIALIDADES } from "@/lib/especialidade.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,10 +18,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const ESPECIALIDADES = [
-  "Clínico Geral", "Cardiologia", "Dermatologia", "Ginecologia", "Ortopedia",
-  "Pediatria", "Oftalmologia", "Psiquiatria", "Neurologia", "Endocrinologia",
-];
 
 function maskPhone(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -33,6 +31,20 @@ function Index() {
   const [form, setForm] = useState({ nome: "", cidade: "", telefone: "", especialidade: "" });
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "erro">("idle");
   const [erro, setErro] = useState("");
+  const [necessidades, setNecessidades] = useState("");
+  const [ia, setIa] = useState<{ loading: boolean; motivo?: string; erro?: string }>({ loading: false });
+  const sugerir = useServerFn(sugerirEspecialidade);
+
+  async function pedirSugestao() {
+    if (necessidades.trim().length < 5) { setIa({ loading: false, erro: "Descreva melhor as necessidades do paciente." }); return; }
+    setIa({ loading: true });
+    try {
+      const r = await sugerir({ data: { necessidades } });
+      if ("error" in r && r.error) { setIa({ loading: false, erro: r.error }); return; }
+      if ("especialidade" in r && r.especialidade) setForm((f) => ({ ...f, especialidade: r.especialidade }));
+      setIa({ loading: false, motivo: "motivo" in r ? r.motivo : undefined });
+    } catch { setIa({ loading: false, erro: "Não foi possível obter a sugestão." }); }
+  }
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +77,7 @@ function Index() {
               <h2 className="font-display text-2xl text-card-foreground">Solicitação enviada!</h2>
               <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Ligaremos para {form.telefone} em breve.</p>
               <button className="mt-6 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                onClick={() => { setForm({ nome: "", cidade: "", telefone: "", especialidade: "" }); setStatus("idle"); }}>
+                onClick={() => { setForm({ nome: "", cidade: "", telefone: "", especialidade: "" }); setNecessidades(""); setIa({ loading: false }); setStatus("idle"); }}>
                 Fazer novo agendamento
               </button>
             </div>
@@ -83,6 +95,19 @@ function Index() {
                 <input className="campo" inputMode="tel" value={form.telefone} placeholder="(11) 99999-9999"
                   onChange={(e) => setForm({ ...form, telefone: maskPhone(e.target.value) })} />
               </Campo>
+              <Campo label="Necessidades do paciente">
+                <textarea className="campo min-h-24" value={necessidades} maxLength={2000}
+                  placeholder="Ex.: dor no peito ao subir escadas há duas semanas"
+                  onChange={(e) => setNecessidades(e.target.value)} />
+              </Campo>
+              <div className="rounded-xl bg-primary/5 p-4">
+                <button type="button" onClick={pedirSugestao} disabled={ia.loading}
+                  className="rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:opacity-60">
+                  {ia.loading ? "Analisando..." : "✨ Sugerir especialidade com IA"}
+                </button>
+                {ia.motivo && <p className="mt-2 text-sm text-muted-foreground">{ia.motivo}</p>}
+                {ia.erro && <p className="mt-2 text-sm text-destructive">{ia.erro}</p>}
+              </div>
               <Campo label="Especialidade">
                 <select className="campo" value={form.especialidade}
                   onChange={(e) => setForm({ ...form, especialidade: e.target.value })}>
