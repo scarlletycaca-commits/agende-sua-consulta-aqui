@@ -1,0 +1,1 @@
+ALTER TABLE public.agendamentos ADD COLUMN cpf text, ADD COLUMN data_preferida date, ADD COLUMN necessidades text;

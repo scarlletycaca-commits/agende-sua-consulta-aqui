@@ -17,25 +17,34 @@ export type Database = {
       agendamentos: {
         Row: {
           cidade: string
+          cpf: string | null
           created_at: string
+          data_preferida: string | null
           especialidade: string
           id: string
+          necessidades: string | null
           nome: string
           telefone: string
         }
         Insert: {
           cidade: string
+          cpf?: string | null
           created_at?: string
+          data_preferida?: string | null
           especialidade: string
           id?: string
+          necessidades?: string | null
           nome: string
           telefone: string
         }
         Update: {
           cidade?: string
+          cpf?: string | null
           created_at?: string
+          data_preferida?: string | null
           especialidade?: string
           id?: string
+          necessidades?: string | null
           nome?: string
           telefone?: string
         }
