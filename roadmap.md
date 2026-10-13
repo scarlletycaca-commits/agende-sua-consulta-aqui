@@ -5,3 +5,5 @@
 - [ ] Lista de especialidades ainda é genérica: aguardo as especialidades reais da clínica
 - [ ] Pendente (decisão do usuário): sugestão de especialidade por IA foi retirada junto com a caixa de necessidades
 - [ ] Pendente (bloqueio): número real de especialidades/horários da clínica para a agenda usar horários livres
+- [ ] Publicar o app para o WhatsApp abrir sem bloqueio (usuário pediu como desbloquear)
+
