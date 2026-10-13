@@ -86,7 +86,6 @@ function Index() {
     });
     if (error) { setStatus("erro"); setErro("Não foi possível enviar. Tente novamente."); return; }
     setStatus("ok");
-    window.open(linkWhats(), "_blank");
   }
 
   function linkWhats() {
@@ -109,7 +108,7 @@ function Index() {
             <div className="text-center py-6">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-2xl text-primary">✓</div>
               <h2 className="font-display text-2xl text-card-foreground">Solicitação enviada!</h2>
-              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Envie a mensagem no WhatsApp que abriu. A clínica responderá confirmando se há disponibilidade em {form.data && fmtData(form.data)}.</p>
+              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Toque no botão abaixo para enviar a mensagem no WhatsApp. A clínica responderá confirmando se há disponibilidade em {form.data && fmtData(form.data)}.</p>
               <a href={linkWhats()} target="_blank" rel="noreferrer"
                 className="mt-5 inline-block rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
                 Abrir WhatsApp da clínica
