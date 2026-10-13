@@ -27,6 +27,9 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --shadow-soft: 0 20px 50px -20px color-mix(in oklab, var(--primary) 35%, transparent);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -63,13 +66,13 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: oklch(0.975 0.012 170);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.5 0.1 175);
   --primary-foreground: oklch(0.984 0.003 247.858);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
@@ -81,7 +84,7 @@
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --ring: oklch(0.5 0.1 175);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -141,4 +144,9 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+@layer components {
+  .campo { width:100%; border-radius:0.75rem; border:1px solid var(--color-input); background:var(--color-background); padding:0.7rem 0.9rem; color:var(--color-foreground); outline:none; }
+  .campo:focus { border-color:var(--color-ring); box-shadow:0 0 0 3px color-mix(in oklab, var(--color-ring) 20%, transparent); }
 }
