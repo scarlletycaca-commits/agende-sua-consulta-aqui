@@ -67,7 +67,7 @@ function Index() {
     <main className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <header className="mb-8 text-center">
-          <img src={logo} alt="Clínica ECLIM" className="mx-auto mb-5 h-40 w-auto rounded-2xl bg-white p-3 shadow-soft" />
+          <img src={logo.url} alt="Clínica ECLIM" className="mx-auto mb-5 h-40 w-auto rounded-2xl bg-white p-3 shadow-soft" />
           <h1 className="font-display text-4xl text-foreground">Agende sua consulta</h1>
           <p className="mt-3 text-muted-foreground">Preencha os dados. Sua solicitação vai para o WhatsApp da clínica, que confirma a disponibilidade.</p>
         </header>
