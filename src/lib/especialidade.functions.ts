@@ -1,9 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 
 export const ESPECIALIDADES = [
-  "Clínico Geral", "Cardiologia", "Dermatologia", "Ginecologia", "Ortopedia",
-  "Pediatria", "Oftalmologia", "Psiquiatria", "Neurologia", "Endocrinologia",
+  "Urologia", "Cardiologia", "Ultrassonografia", "Ginecologia", "Reumatologia", "Pneumologia",
+  "Angiologia", "Neurologia", "Proctologia", "Geriatria", "Otorrino", "Cirurgião Cabeça e Pescoço",
+  "Fisioterapia", "Clínico Geral", "Mastologia", "Audiologia", "Ortopedia", "Endocrinologia",
+  "Dermatologia", "Psiquiatria", "Psicologia",
 ];
+
+export const SUBTIPOS: Record<string, string[]> = {
+  Ultrassonografia: [
+    "Obstétrica", "Abdômen total", "Abdômen superior", "Cervical", "Tireoide", "Transvaginal",
+    "Mamária", "Parede abdominal", "Região inguinal", "Partes moles", "Bolsa escrotal", "Outros",
+  ],
+  Cardiologia: ["Consulta", "Ecocardiograma", "MAPA", "Holter", "Risco cirúrgico", "Eletrocardiograma com laudo"],
+  Neurologia: ["Consulta", "Eletroneuromiografia"],
+};
 
 export const sugerirEspecialidade = createServerFn({ method: "POST" })
   .inputValidator((d: { necessidades: string }) => {
