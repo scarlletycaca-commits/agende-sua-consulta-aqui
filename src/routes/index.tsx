@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-eclim.png";
-import { ESPECIALIDADES } from "@/lib/especialidade.functions";
+import { ESPECIALIDADES, SUBTIPOS } from "@/lib/especialidade.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -51,30 +51,39 @@ function maskPhone(v: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-function Index() {
-  const [form, setForm] = useState({ nome: "", cpf: "", cidade: "", telefone: "", especialidade: "", data: "" });
-  const [status, setStatus] = useState<"idle" | "saving" | "ok" | "erro">("idle");
-  const [erro, setErro] = useState("");
+const VAZIO = { nome: "", cidade: "", telefone: "", especialidade: "", tipo: "", data: "" };
 
-  async function enviar(e: React.FormEvent) {
+function Index() {
+  const [form, setForm] = useState(VAZIO);
+  const [status, setStatus] = useState<"idle" | "revisar" | "saving" | "ok" | "erro">("idle");
+  const [erro, setErro] = useState("");
+  const tipos = SUBTIPOS[form.especialidade];
+  const espCompleta = form.tipo ? `${form.especialidade} - ${form.tipo}` : form.especialidade;
+
+  function revisar(e: React.FormEvent) {
     e.preventDefault();
     if (form.nome.trim().length < 2 || form.cidade.trim().length < 2 || form.telefone.replace(/\D/g, "").length < 10 || !form.especialidade || !form.data) {
       setErro("Preencha todos os campos corretamente.");
       return;
     }
-    if (!cpfValido(form.cpf)) { setErro("CPF inválido."); return; }
+    if (tipos && !form.tipo) { setErro(`Especifique o tipo de ${form.especialidade}.`); return; }
     setErro("");
+    setStatus("revisar");
+  }
+
+  async function confirmar() {
     setStatus("saving");
     const { error } = await supabase.from("agendamentos").insert({
-      nome: form.nome.trim(), cidade: form.cidade.trim(), telefone: form.telefone, especialidade: form.especialidade,
-      cpf: form.cpf, data_preferida: form.data,
+      nome: form.nome.trim(), cidade: form.cidade.trim(), telefone: form.telefone, especialidade: espCompleta,
+      data_preferida: form.data,
     });
-    if (error) { setStatus("erro"); setErro("Não foi possível enviar. Tente novamente."); return; }
+    if (error) { setStatus("revisar"); setErro("Não foi possível enviar. Tente novamente."); return; }
+    setErro("");
     setStatus("ok");
   }
 
   function linkWhats() {
-    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCPF: ${form.cpf}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${form.especialidade}\nData sugerida: ${form.data ? fmtData(form.data) : "-"}\n\nPor favor, confirmem se há disponibilidade nesta data.`;
+    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${espCompleta}\nData sugerida: ${form.data ? fmtData(form.data) : "-"}\n\nPor favor, confirmem se há disponibilidade nesta data.`;
     return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -91,42 +100,67 @@ function Index() {
           {status === "ok" ? (
             <div className="text-center py-6">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-2xl text-primary">✓</div>
-              <h2 className="font-display text-2xl text-card-foreground">Solicitação enviada!</h2>
-              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Toque no botão abaixo para enviar a mensagem no WhatsApp. A clínica responderá confirmando se há disponibilidade em {form.data && fmtData(form.data)}.</p>
+              <h2 className="font-display text-2xl text-card-foreground">Dados confirmados!</h2>
+              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Toque no botão abaixo para enviar a solicitação no WhatsApp. A clínica responderá confirmando se há disponibilidade em {form.data && fmtData(form.data)}.</p>
               <a href={linkWhats()} target="_blank" rel="noreferrer"
                 className="mt-5 inline-block rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
-                Abrir WhatsApp da clínica
+                Enviar no WhatsApp da clínica
               </a>
-              <button className="mt-6 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                onClick={() => { setForm({ nome: "", cpf: "", cidade: "", telefone: "", especialidade: "", data: "" }); setStatus("idle"); }}>
+              <button className="mt-6 block mx-auto text-sm font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => { setForm(VAZIO); setStatus("idle"); }}>
                 Fazer novo agendamento
               </button>
             </div>
+          ) : status === "revisar" || status === "saving" ? (
+            <div>
+              <h2 className="font-display text-2xl text-card-foreground">Confira seus dados</h2>
+              <dl className="mt-4 space-y-2 text-sm">
+                {[["Paciente", form.nome.trim()], ["Cidade", form.cidade.trim()], ["Telefone", form.telefone],
+                  ["Especialidade", espCompleta], ["Data preferida", fmtData(form.data)]].map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4 border-b pb-2">
+                    <dt className="text-muted-foreground">{k}</dt><dd className="text-right font-medium text-card-foreground">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              {erro && <p className="mt-3 text-sm text-destructive">{erro}</p>}
+              <button onClick={confirmar} disabled={status === "saving"}
+                className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60">
+                {status === "saving" ? "Confirmando..." : "Confirmar dados"}
+              </button>
+              <button onClick={() => setStatus("idle")} className="mt-3 w-full text-sm font-medium text-primary hover:underline">
+                Corrigir dados
+              </button>
+            </div>
           ) : (
-            <form onSubmit={enviar} className="space-y-5">
+            <form onSubmit={revisar} className="space-y-5">
               <Campo label="Nome do paciente">
                 <input className="campo" value={form.nome} maxLength={120} placeholder="Ex.: Maria da Silva"
                   onChange={(e) => setForm({ ...form, nome: e.target.value })} />
               </Campo>
-              <Campo label="CPF">
-                <input className="campo" inputMode="numeric" value={form.cpf} placeholder="000.000.000-00"
-                  onChange={(e) => setForm({ ...form, cpf: maskCpf(e.target.value) })} />
-              </Campo>
               <Campo label="Cidade">
-                <input className="campo" value={form.cidade} maxLength={80} placeholder="Ex.: São Paulo"
+                <input className="campo" value={form.cidade} maxLength={80} placeholder="Ex.: João Pessoa"
                   onChange={(e) => setForm({ ...form, cidade: e.target.value })} />
               </Campo>
               <Campo label="Telefone">
-                <input className="campo" inputMode="tel" value={form.telefone} placeholder="(11) 99999-9999"
+                <input className="campo" inputMode="tel" value={form.telefone} placeholder="(83) 99999-9999"
                   onChange={(e) => setForm({ ...form, telefone: maskPhone(e.target.value) })} />
               </Campo>
               <Campo label="Especialidade">
                 <select className="campo" value={form.especialidade}
-                  onChange={(e) => setForm({ ...form, especialidade: e.target.value })}>
+                  onChange={(e) => setForm({ ...form, especialidade: e.target.value, tipo: "" })}>
                   <option value="">Selecione...</option>
                   {ESPECIALIDADES.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </Campo>
+              {tipos && (
+                <Campo label={`Tipo de ${form.especialidade}`}>
+                  <select className="campo" value={form.tipo}
+                    onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+                    <option value="">Selecione...</option>
+                    {tipos.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </Campo>
+              )}
               <Campo label="Data preferida">
                 <input type="date" className="campo" min={hoje()} value={form.data}
                   onChange={(e) => setForm({ ...form, data: e.target.value })} />
@@ -136,9 +170,9 @@ function Index() {
                 </button>
               </Campo>
               {erro && <p className="text-sm text-destructive">{erro}</p>}
-              <button type="submit" disabled={status === "saving"}
-                className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60">
-                {status === "saving" ? "Enviando..." : "Enviar solicitação pelo WhatsApp"}
+              <button type="submit"
+                className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition hover:opacity-90">
+                Continuar
               </button>
             </form>
           )}
