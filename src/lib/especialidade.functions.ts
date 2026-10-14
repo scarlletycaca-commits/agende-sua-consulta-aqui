@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 
 export const ESPECIALIDADES = [
-  "Urologia", "Cardiologia", "Ultrassonografia", "Ginecologia", "Reumatologia", "Pneumologia",
-  "Angiologia", "Neurologia", "Proctologia", "Geriatria", "Otorrino", "Cirurgião Cabeça e Pescoço",
-  "Fisioterapia", "Clínico Geral", "Mastologia", "Audiologia", "Ortopedia", "Endocrinologia",
-  "Dermatologia", "Psiquiatria", "Psicologia",
+  "Angiologia", "Audiologia", "Cardiologia", "Cirurgião Cabeça e Pescoço", "Clínico Geral",
+  "Dermatologia", "Endocrinologia", "Fisioterapia", "Geriatria", "Ginecologia", "Mastologia",
+  "Neurologia", "Ortopedia", "Otorrino", "Pneumologia", "Proctologia", "Psicologia",
+  "Psiquiatria", "Reumatologia", "Ultrassonografia", "Urologia",
 ];
 
 export const SUBTIPOS: Record<string, string[]> = {
