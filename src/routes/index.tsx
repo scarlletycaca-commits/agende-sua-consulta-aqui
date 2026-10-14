@@ -20,29 +20,6 @@ export const Route = createFileRoute("/")({
 
 const WHATS = "5583988551095";
 
-function maskCpf(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 11);
-  return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-function cpfValido(v: string) {
-  const c = v.replace(/\D/g, "");
-  if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
-  for (const t of [9, 10]) {
-    let s = 0;
-    for (let i = 0; i < t; i++) s += Number(c[i]) * (t + 1 - i);
-    if (((s * 10) % 11) % 10 !== Number(c[t])) return false;
-  }
-  return true;
-}
-function proximaDataUtil() {
-  const d = new Date();
-  d.setDate(d.getDate() + 2);
-  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-function hoje() { return new Date().toISOString().slice(0, 10); }
-function fmtData(iso: string) { const [y, m, d] = iso.split("-"); return `${d}/${m}/${y}`; }
-
 function maskPhone(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return d;
@@ -51,7 +28,7 @@ function maskPhone(v: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-const VAZIO = { nome: "", cidade: "", telefone: "", especialidade: "", tipo: "", data: "" };
+const VAZIO = { nome: "", cidade: "", telefone: "", especialidade: "", tipo: "" };
 
 function Index() {
   const [form, setForm] = useState(VAZIO);
@@ -62,7 +39,7 @@ function Index() {
 
   function revisar(e: React.FormEvent) {
     e.preventDefault();
-    if (form.nome.trim().length < 2 || form.cidade.trim().length < 2 || form.telefone.replace(/\D/g, "").length < 10 || !form.especialidade || !form.data) {
+    if (form.nome.trim().length < 2 || form.cidade.trim().length < 2 || form.telefone.replace(/\D/g, "").length < 10 || !form.especialidade) {
       setErro("Preencha todos os campos corretamente.");
       return;
     }
@@ -75,7 +52,6 @@ function Index() {
     setStatus("saving");
     const { error } = await supabase.from("agendamentos").insert({
       nome: form.nome.trim(), cidade: form.cidade.trim(), telefone: form.telefone, especialidade: espCompleta,
-      data_preferida: form.data,
     });
     if (error) { setStatus("revisar"); setErro("Não foi possível enviar. Tente novamente."); return; }
     setErro("");
@@ -83,7 +59,7 @@ function Index() {
   }
 
   function linkWhats() {
-    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${espCompleta}\nData sugerida: ${form.data ? fmtData(form.data) : "-"}\n\nPor favor, confirmem se há disponibilidade nesta data.`;
+    const msg = `*Nova solicitação de consulta - Clínica ECLIM*\n\nPaciente: ${form.nome.trim()}\nCidade: ${form.cidade.trim()}\nTelefone: ${form.telefone}\nEspecialidade: ${espCompleta}\n\nPor favor, confirmem se há disponibilidade.`;
     return `https://wa.me/${WHATS}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -93,7 +69,7 @@ function Index() {
         <header className="mb-8 text-center">
           <img src={logo} alt="Clínica ECLIM" className="mx-auto mb-4 h-36 w-auto object-contain" />
           <h1 className="font-display text-4xl text-foreground">Agende sua consulta</h1>
-          <p className="mt-3 text-muted-foreground">Preencha os dados. Sua solicitação vai para o WhatsApp da clínica, que confirma a disponibilidade da data.</p>
+          <p className="mt-3 text-muted-foreground">Preencha os dados. Sua solicitação vai para o WhatsApp da clínica, que confirma a disponibilidade.</p>
         </header>
 
         <div className="rounded-2xl border bg-card p-8 shadow-soft">
@@ -101,7 +77,7 @@ function Index() {
             <div className="text-center py-6">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-2xl text-primary">✓</div>
               <h2 className="font-display text-2xl text-card-foreground">Dados confirmados!</h2>
-              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Toque no botão abaixo para enviar a solicitação no WhatsApp. A clínica responderá confirmando se há disponibilidade em {form.data && fmtData(form.data)}.</p>
+              <p className="mt-2 text-muted-foreground">Obrigado, {form.nome.split(" ")[0]}. Toque no botão abaixo para enviar a solicitação no WhatsApp. A clínica responderá confirmando se há disponibilidade.</p>
               <a href={linkWhats()} target="_blank" rel="noreferrer"
                 className="mt-5 inline-block rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
                 Enviar no WhatsApp da clínica
@@ -116,7 +92,7 @@ function Index() {
               <h2 className="font-display text-2xl text-card-foreground">Confira seus dados</h2>
               <dl className="mt-4 space-y-2 text-sm">
                 {[["Paciente", form.nome.trim()], ["Cidade", form.cidade.trim()], ["Telefone", form.telefone],
-                  ["Especialidade", espCompleta], ["Data preferida", fmtData(form.data)]].map(([k, v]) => (
+                  ["Especialidade", espCompleta]].map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-4 border-b pb-2">
                     <dt className="text-muted-foreground">{k}</dt><dd className="text-right font-medium text-card-foreground">{v}</dd>
                   </div>
@@ -161,14 +137,6 @@ function Index() {
                   </select>
                 </Campo>
               )}
-              <Campo label="Data preferida">
-                <input type="date" className="campo" min={hoje()} value={form.data}
-                  onChange={(e) => setForm({ ...form, data: e.target.value })} />
-                <button type="button" className="mt-1.5 text-xs font-medium text-primary hover:underline"
-                  onClick={() => setForm({ ...form, data: proximaDataUtil() })}>
-                  Sugerir melhor data disponível ({fmtData(proximaDataUtil())})
-                </button>
-              </Campo>
               {erro && <p className="text-sm text-destructive">{erro}</p>}
               <button type="submit"
                 className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition hover:opacity-90">
